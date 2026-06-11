@@ -1,4 +1,4 @@
-package br.edu.ifsp.service_users;
+package br.edu.ifsp.competicoes_api;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

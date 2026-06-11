@@ -1,4 +1,4 @@
-package br.edu.ifsp.service_users;
+package br.edu.ifsp.competicoes_api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
