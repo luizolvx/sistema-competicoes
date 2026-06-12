@@ -2,6 +2,7 @@ package br.edu.ifsp.competicoes_api.evento;
 
 import br.edu.ifsp.competicoes_api.dto.evento.EventoRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.evento.EventoResponseDTO;
+import br.edu.ifsp.competicoes_api.mapper.EventoMapper;
 import br.edu.ifsp.competicoes_api.model.Evento;
 import br.edu.ifsp.competicoes_api.repository.EventoRepository;
 import br.edu.ifsp.competicoes_api.service.EventoService;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import java.time.LocalDate;
 
@@ -23,8 +25,13 @@ class EventoServiceTest {
     @Mock
     private EventoRepository eventoRepository;
 
+    // O @Spy faz o Mockito injetar a instância real gerada pelo MapStruct,
+    // permitindo que a conversão de DTO para Model funcione de verdade no teste!
+    @Spy
+    private EventoMapper eventoMapper = EventoMapper.INSTANCE;
+
     @InjectMocks
-    private EventoService eventoService; // Injeta o mock do repository na sua casca vazia
+    private EventoService eventoService;
 
     @BeforeEach
     void setUp() {
@@ -59,5 +66,29 @@ class EventoServiceTest {
 
         // Garante que a camada de serviço realmente acionou o repositório para salvar os dados
         verify(eventoRepository, times(1)).save(any(Evento.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao tentar cadastrar um evento com data no passado")
+    void deveLancarExcecaoQuandoDataNoPassado() {
+        // 1. GIVEN (Preparação do cenário com data retroativa)
+        EventoRequestDTO requestComDataInvalida = new EventoRequestDTO(
+                "Torneio Antigo",
+                "Futebol",
+                "Estádio Municipal",
+                LocalDate.now().minusDays(1) // Ontem (Data no passado!)
+        );
+
+        // 2. WHEN & THEN (Ação e Validação juntas)
+        // Esperamos que o método lance uma IllegalArgumentException ao ser chamado
+        IllegalArgumentException excecao = assertThrows(IllegalArgumentException.class, () -> {
+            eventoService.cadastrarEvento(requestComDataInvalida);
+        });
+
+        // Valida se a mensagem de erro que colocamos na exceção está correta
+        assertEquals("A data do evento não pode ser uma data no passado.", excecao.getMessage());
+
+        // Garante que o repositório NUNCA foi acionado para salvar esse evento inválido
+        verify(eventoRepository, never()).save(any(Evento.class));
     }
 }
