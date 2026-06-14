@@ -2,6 +2,8 @@ package br.edu.ifsp.competicoes_api.partida;
 
 import br.edu.ifsp.competicoes_api.dto.partida.PartidaRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.partida.PartidaResponseDTO;
+import br.edu.ifsp.competicoes_api.dto.partida.PlacarUpdateDTO;
+import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
 import br.edu.ifsp.competicoes_api.mapper.PartidaMapper;
 import br.edu.ifsp.competicoes_api.model.Evento;
 import br.edu.ifsp.competicoes_api.model.Partida;
@@ -145,6 +147,72 @@ class PartidaServiceTest {
         assertEquals("Uma equipe não pode jogar contra ela mesma.", excecao.getMessage());
 
         // Garante que a partida bizarra nunca chegue ao banco de dados
+        verify(partidaRepository, never()).save(any(Partida.class));
+    }
+
+    @Test
+    @DisplayName("Deve atualizar o placar de uma partida com sucesso")
+    void deveAtualizarPlacarComSucesso() {
+        // 1. GIVEN (Preparação)
+        Long partidaId = 1L;
+
+        PlacarUpdateDTO placarDTO = new PlacarUpdateDTO(2, 1);
+
+        // Simulamos o evento e a partida já existentes no banco (antes do jogo, placar nulo)
+        Evento evento = new Evento();
+        evento.setId(10L);
+
+        Partida partidaExistente = new Partida();
+        partidaExistente.setId(partidaId);
+        partidaExistente.setEquipeA("Vasco");
+        partidaExistente.setEquipeB("Flamengo");
+        partidaExistente.setEvento(evento);
+
+        // Simulamos a partida que o banco vai retornar após salvar o placar
+        Partida partidaAtualizada = new Partida();
+        partidaAtualizada.setId(partidaId);
+        partidaAtualizada.setEquipeA("Vasco");
+        partidaAtualizada.setEquipeB("Flamengo");
+        partidaAtualizada.setPlacarEquipeA(2);
+        partidaAtualizada.setPlacarEquipeB(1);
+        partidaAtualizada.setEvento(evento);
+
+        // Ensinamos o repositório a encontrar a partida e depois salvá-la
+        when(partidaRepository.findById(partidaId)).thenReturn(Optional.of(partidaExistente));
+        when(partidaRepository.save(any(Partida.class))).thenReturn(partidaAtualizada);
+
+        // 2. WHEN
+        PartidaResponseDTO response = partidaService.atualizarPlacar(partidaId, placarDTO);
+
+        // 3. THEN (Validação)
+        assertNotNull(response);
+        assertEquals(2, response.placarEquipeA());
+        assertEquals(1, response.placarEquipeB());
+
+        verify(partidaRepository, times(1)).findById(partidaId);
+        verify(partidaRepository, times(1)).save(any(Partida.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao tentar atualizar placar de uma partida inexistente")
+    void deveLancarExcecaoQuandoAtualizarPlacarDePartidaInexistente() {
+        // 1. GIVEN (Preparação do cenário)
+        Long partidaIdInexistente = 999L; // Um ID que com certeza não existe
+
+        PlacarUpdateDTO placarDTO = new PlacarUpdateDTO(2, 1);
+
+        // Ensinamos o Mock a retornar "Vazio" (Optional.empty) quando procurarem por esse ID
+        when(partidaRepository.findById(partidaIdInexistente)).thenReturn(Optional.empty());
+
+        // 2. WHEN & THEN (Ação e Validação)
+        ResourceNotFoundException excecao = assertThrows(ResourceNotFoundException.class, () -> {
+            partidaService.atualizarPlacar(partidaIdInexistente, placarDTO);
+        });
+
+        // Validamos se a mensagem de erro é exatamente a que esperamos
+        assertEquals("Partida não encontrada com o ID: 999", excecao.getMessage());
+
+        // Garantimos que, diante do erro, o repositório nunca tentou salvar nada
         verify(partidaRepository, never()).save(any(Partida.class));
     }
 }
