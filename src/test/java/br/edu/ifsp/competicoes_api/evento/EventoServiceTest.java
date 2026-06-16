@@ -9,86 +9,86 @@ import br.edu.ifsp.competicoes_api.service.EventoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class EventoServiceTest {
 
     @Mock
     private EventoRepository eventoRepository;
 
-    // O @Spy faz o Mockito injetar a instância real gerada pelo MapStruct,
-    // permitindo que a conversão de DTO para Model funcione de verdade no teste!
+    // Mudamos de @Mock para @Spy usando a instância real do MapStruct
     @Spy
-    private EventoMapper eventoMapper = EventoMapper.INSTANCE;
+    private EventoMapper eventoMapper = Mappers.getMapper(EventoMapper.class);
 
     @InjectMocks
     private EventoService eventoService;
 
+    private EventoRequestDTO requestValido;
+    private Evento eventoMock;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        requestValido = new EventoRequestDTO("Interclasses IFSP", "Futebol", "Quadra Principal", LocalDate.now().plusDays(2));
+        eventoMock = new Evento("Interclasses IFSP", "Futebol", "Quadra Principal", LocalDate.now().plusDays(2));
+        eventoMock.setId(1L);
     }
 
     @Test
-    @DisplayName("Deve cadastrar um evento esportivo com sucesso no fluxo de TDD")
+    @DisplayName("Deve cadastrar um evento com sucesso quando os dados forem válidos")
     void deveCadastrarEventoComSucesso() {
-        // 1. GIVEN (Preparação do cenário)
-        EventoRequestDTO request = new EventoRequestDTO(
-                "Torneio de Basquete IFSP",
-                "Basquete",
-                "Quadra Poliesportiva",
-                LocalDate.now().plusDays(7)
-        );
+        // Arrange
+        // Como o mapper agora é real, NÃO precisamos dos 'when(eventoMapper...)'
+        when(eventoRepository.save(any(Evento.class))).thenReturn(eventoMock);
 
-        Evento eventoSalvo = new Evento("Torneio de Basquete IFSP", "Basquete", "Quadra Poliesportiva", LocalDate.now().plusDays(7));
-        eventoSalvo.setId(1L); // Simula o ID que o banco de dados auto-incrementaria
+        // Act
+        EventoResponseDTO resultado = eventoService.cadastrarEvento(requestValido);
 
-        // Ensinando o Mockito a responder o evento com ID simulado quando o .save() for chamado
-        when(eventoRepository.save(any(Evento.class))).thenReturn(eventoSalvo);
-
-        // 2. WHEN (A ação que vai disparar a lógica)
-        // ATENÇÃO: O IntelliJ vai deixar o método 'cadastrarEvento' vermelho. Isso é o TDD puro acontecendo!
-        EventoResponseDTO response = eventoService.cadastrarEvento(request);
-
-        // 3. THEN (As validações do resultado)
-        assertNotNull(response);
-        assertEquals(1L, response.id());
-        assertEquals("Torneio de Basquete IFSP", response.nome());
-
-        // Garante que a camada de serviço realmente acionou o repositório para salvar os dados
+        // Assert
+        assertNotNull(resultado);
+        assertEquals(1L, resultado.id());
+        assertEquals("Interclasses IFSP", resultado.nome());
         verify(eventoRepository, times(1)).save(any(Evento.class));
     }
 
     @Test
-    @DisplayName("Deve lançar exceção ao tentar cadastrar um evento com data no passado")
-    void deveLancarExcecaoQuandoDataNoPassado() {
-        // 1. GIVEN (Preparação do cenário com data retroativa)
-        EventoRequestDTO requestComDataInvalida = new EventoRequestDTO(
-                "Torneio Antigo",
-                "Futebol",
-                "Estádio Municipal",
-                LocalDate.now().minusDays(1) // Ontem (Data no passado!)
-        );
+    @DisplayName("Deve lançar exceção ao tentar cadastrar evento com data no passado")
+    void deveLancarexcecaoParaDataNoPassado() {
+        // Arrange
+        EventoRequestDTO requestInvalido = new EventoRequestDTO("Campeonato Ruim", "Basquete", "Ginásio", LocalDate.now().minusDays(1));
 
-        // 2. WHEN & THEN (Ação e Validação juntas)
-        // Esperamos que o método lance uma IllegalArgumentException ao ser chamado
+        // Act & Assert
         IllegalArgumentException excecao = assertThrows(IllegalArgumentException.class, () -> {
-            eventoService.cadastrarEvento(requestComDataInvalida);
+            eventoService.cadastrarEvento(requestInvalido);
         });
 
-        // Valida se a mensagem de erro que colocamos na exceção está correta
         assertEquals("A data do evento não pode ser uma data no passado.", excecao.getMessage());
+        verify(eventoRepository, never()).save(any());
+    }
 
-        // Garante que o repositório NUNCA foi acionado para salvar esse evento inválido
-        verify(eventoRepository, never()).save(any(Evento.class));
+    @Test
+    @DisplayName("Deve listar todos os eventos cadastrados")
+    void deveListarTodosOsEventos() {
+        // Arrange
+        when(eventoRepository.findAll()).thenReturn(List.of(eventoMock));
+
+        // Act
+        List<EventoResponseDTO> listagem = eventoService.listarTodos();
+
+        // Assert
+        assertFalse(listagem.isEmpty());
+        assertEquals(1, listagem.size());
+        assertEquals("Futebol", listagem.get(0).modalidade());
     }
 }

@@ -1,8 +1,9 @@
 package br.edu.ifsp.competicoes_api.controller;
 
-import br.edu.ifsp.competicoes_api.model.Evento;
-import br.edu.ifsp.competicoes_api.repository.EventoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import br.edu.ifsp.competicoes_api.dto.evento.EventoRequestDTO;
+import br.edu.ifsp.competicoes_api.dto.evento.EventoResponseDTO;
+import br.edu.ifsp.competicoes_api.service.EventoService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,26 +14,28 @@ import java.util.List;
 @RequestMapping("/eventos")
 public class EventoController {
 
-    @Autowired
-    private EventoRepository eventoRepository;
+    private final EventoService eventoService;
+
+    // Injeção via construtor (Boa prática recomendada pelo Spring)
+    public EventoController(EventoService eventoService) {
+        this.eventoService = eventoService;
+    }
 
     /**
      * REQUISITO: Cadastro e Controle de Eventos Esportivos
-     * Permite que os organizadores cadastrem novas competições e modalidades no IFSP.
      */
     @PostMapping
-    public ResponseEntity<Evento> criarEvento(@RequestBody Evento evento) {
-        Evento novoEvento = eventoRepository.save(evento);
+    public ResponseEntity<EventoResponseDTO> criarEvento(@RequestBody @Valid EventoRequestDTO requestDTO) {
+        EventoResponseDTO novoEvento = eventoService.cadastrarEvento(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(novoEvento);
     }
 
     /**
      * REQUISITO: Visualização de Eventos Disponíveis
-     * Permite que atletas, treinadores e espectadores listem todas as competições.
      */
     @GetMapping
-    public ResponseEntity<List<Evento>> listarTodos() {
-        List<Evento> eventos = eventoRepository.findAll();
+    public ResponseEntity<List<EventoResponseDTO>> listarTodos() {
+        List<EventoResponseDTO> eventos = eventoService.listarTodos();
         return ResponseEntity.ok(eventos);
     }
 }
