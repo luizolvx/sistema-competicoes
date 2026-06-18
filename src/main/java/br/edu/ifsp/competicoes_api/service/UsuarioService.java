@@ -4,6 +4,7 @@ import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioResponseDTO;
 import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
 import br.edu.ifsp.competicoes_api.mapper.UsuarioMapper;
+import br.edu.ifsp.competicoes_api.model.Role;
 import br.edu.ifsp.competicoes_api.model.Usuario;
 import br.edu.ifsp.competicoes_api.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,8 @@ public class UsuarioService {
 
         // 1. Converte o DTO para Entidade
         Usuario usuario = usuarioMapper.toModel(requestDTO);
+
+        usuario.setRole(Role.ROLE_USER);
 
         // 2. Salva no banco de dados
         Usuario usuarioSalvo = usuarioRepository.save(usuario);

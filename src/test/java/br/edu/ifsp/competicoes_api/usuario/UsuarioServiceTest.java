@@ -197,6 +197,7 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao tentar atualizar para um e-mail já usado por outro usuário")
     void deveLancarExcecaoAoAtualizarComEmailDeOutroUsuario() {
+        // GIVEN
         Long meuId = 1L;
         Usuario meuUsuario = new Usuario();
         meuUsuario.setId(meuId);
@@ -205,11 +206,13 @@ class UsuarioServiceTest {
         UsuarioRequestDTO requestAtualizacao = new UsuarioRequestDTO("Gustavo", "luiz@email.com", "senha123");
 
         Usuario outroUsuario = new Usuario();
+        outroUsuario.setId(2L);
         outroUsuario.setEmail("luiz@email.com");
 
         when(usuarioRepository.findById(meuId)).thenReturn(Optional.of(meuUsuario));
         when(usuarioRepository.findByEmail(requestAtualizacao.email())).thenReturn(Optional.of(outroUsuario));
 
+        // WHEN & THEN
         IllegalArgumentException excecao = assertThrows(IllegalArgumentException.class, () -> {
             usuarioService.atualizarUsuario(meuId, requestAtualizacao);
         });
