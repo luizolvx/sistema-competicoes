@@ -5,6 +5,7 @@ import br.edu.ifsp.competicoes_api.dto.evento.EventoResponseDTO;
 import br.edu.ifsp.competicoes_api.mapper.EventoMapper;
 import br.edu.ifsp.competicoes_api.model.Evento;
 import br.edu.ifsp.competicoes_api.repository.EventoRepository;
+import br.edu.ifsp.competicoes_api.repository.UsuarioRepository;
 import br.edu.ifsp.competicoes_api.service.EventoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.time.LocalDate;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,6 +26,10 @@ class EventoServiceTest {
 
     @Mock
     private EventoRepository eventoRepository;
+
+    // INJEÇÃO DA NOVA DEPENDÊNCIA: Necessária para o fluxo de notificações não quebrar
+    @Mock
+    private UsuarioRepository usuarioRepository;
 
     // O @Spy faz o Mockito injetar a instância real gerada pelo MapStruct,
     // permitindo que a conversão de DTO para Model funcione de verdade no teste!
@@ -50,13 +56,16 @@ class EventoServiceTest {
         );
 
         Evento eventoSalvo = new Evento("Torneio de Basquete IFSP", "Basquete", "Quadra Poliesportiva", LocalDate.now().plusDays(7));
-        eventoSalvo.setId(1L); // Simula o ID que o banco de dados auto-incrementaria
+        eventoSalvo.setId(1L);
 
         // Ensinando o Mockito a responder o evento com ID simulado quando o .save() for chamado
         when(eventoRepository.save(any(Evento.class))).thenReturn(eventoSalvo);
+        
+        // Ensinando o novo repositório a retornar uma lista vazia de usuários interessados 
+        // para que a lógica de disparo de notificações passe sem falhas
+        when(usuarioRepository.findByInteressesContaining(any(String.class))).thenReturn(Collections.emptyList());
 
         // 2. WHEN (A ação que vai disparar a lógica)
-        // ATENÇÃO: O IntelliJ vai deixar o método 'cadastrarEvento' vermelho. Isso é o TDD puro acontecendo!
         EventoResponseDTO response = eventoService.cadastrarEvento(request);
 
         // 3. THEN (As validações do resultado)
@@ -64,8 +73,9 @@ class EventoServiceTest {
         assertEquals(1L, response.id());
         assertEquals("Torneio de Basquete IFSP", response.nome());
 
-        // Garante que a camada de serviço realmente acionou o repositório para salvar os dados
+        // Garante que a camada de serviço realmente acionou os repositórios devidos
         verify(eventoRepository, times(1)).save(any(Evento.class));
+        verify(usuarioRepository, times(1)).findByInteressesContaining("Basquete");
     }
 
     @Test
@@ -80,7 +90,6 @@ class EventoServiceTest {
         );
 
         // 2. WHEN & THEN (Ação e Validação juntas)
-        // Esperamos que o método lance uma IllegalArgumentException ao ser chamado
         IllegalArgumentException excecao = assertThrows(IllegalArgumentException.class, () -> {
             eventoService.cadastrarEvento(requestComDataInvalida);
         });
@@ -90,5 +99,7 @@ class EventoServiceTest {
 
         // Garante que o repositório NUNCA foi acionado para salvar esse evento inválido
         verify(eventoRepository, never()).save(any(Evento.class));
+        // Como a validação falha logo no início, o fluxo de notificações nem deve ser chamado
+        verify(usuarioRepository, never()).findByInteressesContaining(any(String.class));
     }
 }

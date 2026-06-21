@@ -17,6 +17,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,14 +46,12 @@ class PartidaServiceTest {
     @Test
     @DisplayName("Deve cadastrar uma partida com sucesso vinculada a um evento")
     void deveCadastrarPartidaComSucesso() {
-        // 1. GIVEN (Preparação do cenário)
+        // 1. GIVEN
         Long eventoId = 1L;
-
         Evento eventoExistente = new Evento();
         eventoExistente.setId(eventoId);
         eventoExistente.setNome("Torneio de Futebol");
 
-        // Usando o seu PartidaRequestDTO real
         PartidaRequestDTO request = new PartidaRequestDTO(
                 "Vasco",
                 "Flamengo",
@@ -59,7 +60,6 @@ class PartidaServiceTest {
                 eventoId
         );
 
-        // Simulando a Entidade que o banco de dados vai salvar
         Partida partidaSalva = new Partida();
         partidaSalva.setId(10L);
         partidaSalva.setEquipeA(request.equipeA());
@@ -67,22 +67,21 @@ class PartidaServiceTest {
         partidaSalva.setDataHora(request.dataHora());
         partidaSalva.setLocal(request.local());
         partidaSalva.setEvento(eventoExistente);
-        // O placar começa nulo por padrão
 
         when(eventoRepository.findById(eventoId)).thenReturn(Optional.of(eventoExistente));
         when(partidaRepository.save(any(Partida.class))).thenReturn(partidaSalva);
 
-        // 2. WHEN (Ação)
+        // 2. WHEN
         PartidaResponseDTO response = partidaService.cadastrarPartida(request);
 
-        // 3. THEN (Validações)
+        // 3. THEN
         assertNotNull(response);
         assertEquals(10L, response.id());
         assertEquals("Vasco", response.equipeA());
         assertEquals("Flamengo", response.equipeB());
         assertEquals("Maracanã", response.local());
         assertEquals(eventoId, response.eventoId());
-        assertNull(response.placarEquipeA()); // Confirma que o placar nasce zerado/nulo
+        assertNull(response.placarEquipeA());
 
         verify(eventoRepository, times(1)).findById(eventoId);
         verify(partidaRepository, times(1)).save(any(Partida.class));
@@ -91,74 +90,62 @@ class PartidaServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao tentar cadastrar uma partida com data no passado")
     void deveLancarExcecaoQuandoDataDaPartidaNoPassado() {
-        // 1. GIVEN (Preparação do cenário com data inválida)
+        // 1. GIVEN
         Long eventoId = 1L;
-
         PartidaRequestDTO requestComDataNoPassado = new PartidaRequestDTO(
                 "Vasco",
                 "Flamengo",
-                LocalDateTime.now().minusDays(1), // Data no passado (Ontem)
+                LocalDateTime.now().minusDays(1),
                 "Maracanã",
                 eventoId
         );
 
-        // Simulamos que o evento existe (para a validação não estourar no evento não encontrado)
         Evento eventoExistente = new Evento();
         eventoExistente.setId(eventoId);
         when(eventoRepository.findById(eventoId)).thenReturn(Optional.of(eventoExistente));
 
-        // 2. WHEN & THEN (Ação e Validação)
+        // 2. WHEN & THEN
         IllegalArgumentException excecao = assertThrows(IllegalArgumentException.class, () -> {
             partidaService.cadastrarPartida(requestComDataNoPassado);
         });
 
-        // Verificamos a mensagem de erro exata
         assertEquals("A data da partida não pode ser no passado.", excecao.getMessage());
-
-        // Garante que o banco de dados nunca foi acionado para salvar essa aberração
         verify(partidaRepository, never()).save(any(Partida.class));
     }
 
     @Test
     @DisplayName("Deve lançar exceção ao tentar cadastrar uma partida com equipes iguais")
     void deveLancarExcecaoQuandoEquipesForemIguais() {
-        // 1. GIVEN (Preparação com times iguais)
+        // 1. GIVEN
         Long eventoId = 1L;
-
         PartidaRequestDTO requestComEquipesIguais = new PartidaRequestDTO(
                 "Vasco",
-                "Vasco", // ❌ Mesmo time nas duas posições!
-                LocalDateTime.now().plusDays(2), // Data válida
+                "Vasco",
+                LocalDateTime.now().plusDays(2),
                 "São Januário",
                 eventoId
         );
 
-        // Simulamos que o evento existe para não estourar erro de evento não encontrado
         Evento eventoExistente = new Evento();
         eventoExistente.setId(eventoId);
         when(eventoRepository.findById(eventoId)).thenReturn(Optional.of(eventoExistente));
 
-        // 2. WHEN & THEN (Ação e Validação)
+        // 2. WHEN & THEN
         IllegalArgumentException excecao = assertThrows(IllegalArgumentException.class, () -> {
             partidaService.cadastrarPartida(requestComEquipesIguais);
         });
 
-        // Verificamos a mensagem de erro exata que vamos programar no Service
         assertEquals("Uma equipe não pode jogar contra ela mesma.", excecao.getMessage());
-
-        // Garante que a partida bizarra nunca chegue ao banco de dados
         verify(partidaRepository, never()).save(any(Partida.class));
     }
 
     @Test
     @DisplayName("Deve atualizar o placar de uma partida com sucesso")
     void deveAtualizarPlacarComSucesso() {
-        // 1. GIVEN (Preparação)
+        // 1. GIVEN
         Long partidaId = 1L;
-
         PlacarUpdateDTO placarDTO = new PlacarUpdateDTO(2, 1);
 
-        // Simulamos o evento e a partida já existentes no banco (antes do jogo, placar nulo)
         Evento evento = new Evento();
         evento.setId(10L);
 
@@ -168,7 +155,6 @@ class PartidaServiceTest {
         partidaExistente.setEquipeB("Flamengo");
         partidaExistente.setEvento(evento);
 
-        // Simulamos a partida que o banco vai retornar após salvar o placar
         Partida partidaAtualizada = new Partida();
         partidaAtualizada.setId(partidaId);
         partidaAtualizada.setEquipeA("Vasco");
@@ -177,14 +163,13 @@ class PartidaServiceTest {
         partidaAtualizada.setPlacarEquipeB(1);
         partidaAtualizada.setEvento(evento);
 
-        // Ensinamos o repositório a encontrar a partida e depois salvá-la
         when(partidaRepository.findById(partidaId)).thenReturn(Optional.of(partidaExistente));
         when(partidaRepository.save(any(Partida.class))).thenReturn(partidaAtualizada);
 
         // 2. WHEN
         PartidaResponseDTO response = partidaService.atualizarPlacar(partidaId, placarDTO);
 
-        // 3. THEN (Validação)
+        // 3. THEN
         assertNotNull(response);
         assertEquals(2, response.placarEquipeA());
         assertEquals(1, response.placarEquipeB());
@@ -196,23 +181,115 @@ class PartidaServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao tentar atualizar placar de uma partida inexistente")
     void deveLancarExcecaoQuandoAtualizarPlacarDePartidaInexistente() {
-        // 1. GIVEN (Preparação do cenário)
-        Long partidaIdInexistente = 999L; // Um ID que com certeza não existe
-
+        // 1. GIVEN
+        Long partidaIdInexistente = 999L;
         PlacarUpdateDTO placarDTO = new PlacarUpdateDTO(2, 1);
 
-        // Ensinamos o Mock a retornar "Vazio" (Optional.empty) quando procurarem por esse ID
         when(partidaRepository.findById(partidaIdInexistente)).thenReturn(Optional.empty());
 
-        // 2. WHEN & THEN (Ação e Validação)
+        // 2. WHEN & THEN
         ResourceNotFoundException excecao = assertThrows(ResourceNotFoundException.class, () -> {
             partidaService.atualizarPlacar(partidaIdInexistente, placarDTO);
         });
 
-        // Validamos se a mensagem de erro é exatamente a que esperamos
         assertEquals("Partida não encontrada com o ID: 999", excecao.getMessage());
-
-        // Garantimos que, diante do erro, o repositório nunca tentou salvar nada
         verify(partidaRepository, never()).save(any(Partida.class));
+    }
+
+    // ==========================================
+    // NOVOS TESTES: CHAVEAMENTO AUTOMÁTICO E LISTAGEM
+    // ==========================================
+
+    @Test
+    @DisplayName("Deve gerar chaveamento com sucesso quando o número de equipes for par")
+    void deveGerarChaveamentoComSucessoQuandoNumeroDeEquipesForPar() {
+        // 1. GIVEN
+        Long eventoId = 1L;
+        Evento evento = new Evento();
+        evento.setId(eventoId);
+
+        List<String> equipes = Arrays.asList("Intersistemas", "ADS Guarulhos", "Edificações FC", "Logística");
+
+        when(eventoRepository.findById(eventoId)).thenReturn(Optional.of(evento));
+        // Configura o mock do repositório para retornar a própria instância que receber no save
+        when(partidaRepository.save(any(Partida.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // 2. WHEN
+        List<PartidaResponseDTO> resultado = partidaService.gerarChaveamentoInicial(eventoId, equipes);
+
+        // 3. THEN
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size(), "4 equipes devem gerar exatamente 2 confrontos.");
+        verify(eventoRepository, times(1)).findById(eventoId);
+        verify(partidaRepository, times(2)).save(any(Partida.class));
+    }
+
+    @Test
+    @DisplayName("Deve adicionar vaga de avanço automático se o número de equipes for ímpar")
+    void deveAdicionarVagaDeAvancoAutomaticoQuandoNumeroDeEquipesForImpar() {
+        // 1. GIVEN
+        Long eventoId = 1L;
+        Evento evento = new Evento();
+        evento.setId(eventoId);
+
+        List<String> equipes = Arrays.asList("Intersistemas", "ADS Guarulhos", "Logística");
+
+        when(eventoRepository.findById(eventoId)).thenReturn(Optional.of(evento));
+        when(partidaRepository.save(any(Partida.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // 2. WHEN
+        List<PartidaResponseDTO> resultado = partidaService.gerarChaveamentoInicial(eventoId, equipes);
+
+        // 3. THEN
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size(), "3 equipes + 1 vaga de folga devem gerar 2 confrontos.");
+        verify(partidaRepository, times(2)).save(any(Partida.class));
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao gerar chaveamento automático com menos de 2 equipes")
+    void deveLancarExcecaoQuandoChaveamentoTiverEquipesInsuficientes() {
+        // 1. GIVEN
+        Long eventoId = 1L;
+        Evento evento = new Evento();
+        evento.setId(eventoId);
+        List<String> equipes = Collections.singletonList("Intersistemas");
+
+        when(eventoRepository.findById(eventoId)).thenReturn(Optional.of(evento));
+
+        // 2. WHEN & THEN
+        IllegalArgumentException excecao = assertThrows(IllegalArgumentException.class, () -> {
+            partidaService.gerarChaveamentoInicial(eventoId, equipes);
+        });
+
+        assertEquals("São necessárias pelo menos 2 equipes para gerar um chaveamento automático.", excecao.getMessage());
+        verify(partidaRepository, never()).save(any(Partida.class));
+    }
+
+    @Test
+    @DisplayName("Deve listar todas as partidas cadastradas com sucesso")
+    void deveListarTodasAsPartidasComSucesso() {
+        // 1. GIVEN
+        Partida p1 = new Partida();
+        p1.setId(101L);
+        p1.setEquipeA("Time A");
+        p1.setEquipeB("Time B");
+
+        Partida p2 = new Partida();
+        p2.setId(102L);
+        p2.setEquipeA("Time C");
+        p2.setEquipeB("Time D");
+
+        when(partidaRepository.findAll()).thenReturn(Arrays.asList(p1, p2));
+
+        // 2. WHEN
+        List<PartidaResponseDTO> resultado = partidaService.listarTodas();
+
+        // 3. THEN
+        assertNotNull(resultado);
+        assertEquals(2, resultado.size());
+        assertEquals(101L, resultado.get(0).id());
+        assertEquals(102L, resultado.get(1).id());
+        verify(partidaRepository, times(1)).findAll();
     }
 }
