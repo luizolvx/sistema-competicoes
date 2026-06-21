@@ -1,0 +1,11 @@
+package br.edu.ifsp.competicoes_api.dto.usuario;
+
+import br.edu.ifsp.competicoes_api.model.Role;
+
+public record LoginResponseDTO(
+    Long id,
+    String nome,
+    String email,
+    Role role,
+    String token // Token simbólico para simular o JWT para o MVP
+) {}

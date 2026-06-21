@@ -1,5 +1,6 @@
 package br.edu.ifsp.competicoes_api.service;
 
+import br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioResponseDTO;
 import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
@@ -25,7 +26,6 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponseDTO cadastrarUsuario(UsuarioRequestDTO requestDTO) {
-
         // REGRA DE NEGÓCIO: Não permitir e-mails duplicados no banco
         if (usuarioRepository.findByEmail(requestDTO.email()).isPresent()) {
             throw new IllegalArgumentException("E-mail já cadastrado no sistema.");
@@ -73,7 +73,7 @@ public class UsuarioService {
         return usuarioRepository.findAll()
                 .stream()
                 .map(usuarioMapper::toResponseDTO)
-                .toList(); // Se estiver usando Java 16+, senão use .collect(Collectors.toList())
+                .toList();
     }
 
     /**
@@ -86,7 +86,6 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o ID: " + id));
 
         // 2. Regra de Negócio: Verifica colisão de E-mail
-        // Se acharmos alguém com esse e-mail no banco, e o ID for DIFERENTE do meu ID, é roubo de e-mail!
         usuarioRepository.findByEmail(requestDTO.email()).ifPresent(usuarioEncontrado -> {
             if (!usuarioEncontrado.getId().equals(id)) {
                 throw new IllegalArgumentException("E-mail já cadastrado no sistema por outro usuário.");
@@ -101,5 +100,32 @@ public class UsuarioService {
         // 4. Salva no banco e converte para resposta
         Usuario usuarioAtualizado = usuarioRepository.save(usuario);
         return usuarioMapper.toResponseDTO(usuarioAtualizado);
+    }
+
+    /**
+     * Autentica as credenciais de login de um usuário (Regra do MVP).
+     */
+    public UsuarioResponseDTO autenticar(LoginRequestDTO loginRequest) {
+        Usuario usuario = usuarioRepository.findByEmail(loginRequest.email())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o e-mail informado."));
+
+        if (!usuario.getSenha().equals(loginRequest.senha())) {
+            throw new IllegalArgumentException("Senha incorreta.");
+        }
+
+        return usuarioMapper.toResponseDTO(usuario);
+    }
+
+    /**
+     * Atualiza e persiste a lista de interesses/modalidades favoritas do usuário.
+     */
+    @Transactional
+    public void atualizarInteresses(Long id, List<String> esportes) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o ID: " + id));
+        
+        // Define a lista de interesses na Entidade (Certifique-se de que sua classe Usuario tenha setInteresses ou setModalidades)
+        usuario.setInteresses(esportes);
+        usuarioRepository.save(usuario);
     }
 }

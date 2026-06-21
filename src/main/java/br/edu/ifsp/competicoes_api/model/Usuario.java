@@ -30,6 +30,12 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comentario> comentarios = new ArrayList<>();
 
+    // Nova funcionalidade: Lista de modalidades/esportes de interesse do usuário para notificações
+    @ElementCollection
+    @CollectionTable(name = "usuario_interesses", joinColumns = @JoinColumn(name = "usuario_id"))
+    @Column(name = "esporte")
+    private List<String> interesses = new ArrayList<>();
+
     // Construtor padrão que o Hibernate exige
     public Usuario() {
     }
@@ -90,5 +96,13 @@ public class Usuario {
 
     public void setComentarios(List<Comentario> comentarios) {
         this.comentarios = comentarios;
+    }
+
+    public List<String> getInteresses() {
+        return interesses;
+    }
+
+    public void setInteresses(List<String> interesses) {
+        this.interesses = interesses;
     }
 }
