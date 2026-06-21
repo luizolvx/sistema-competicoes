@@ -32,15 +32,12 @@ public class PartidaController {
     }
 
     /**
-     * Auxiliar para os espectadores listarem os jogos e verem os placares atualizados
+     * CORREÇÃO DEFINITIVA: Auxiliar para os espectadores listarem os jogos e verem os placares atualizados.
+     * Agora chama o método correto do service (listarTodas()) retornando a lista do banco em DTOs.
      */
     @GetMapping
     public ResponseEntity<List<PartidaResponseDTO>> listarTodas() {
-        // Como o listarTodas antigo usava o repositório bruto, mapeamos aqui para manter o contrato limpo de DTOs
-        // Se precisar de uma listagem customizada no futuro, podemos mover essa chamada para um método específico no Service.
-        List<PartidaResponseDTO> partidas = partidaService.gerarChaveamentoInicial(null, null); 
-        // Nota: Para listar todas sem filtros, o ideal seria termos um 'partidaService.listarTodas()'.
-        // Caso queira manter a listagem geral por DTOs, me avise para adicionarmos esse método no service de forma simples.
+        List<PartidaResponseDTO> partidas = partidaService.listarTodas(); 
         return ResponseEntity.ok(partidas);
     }
 

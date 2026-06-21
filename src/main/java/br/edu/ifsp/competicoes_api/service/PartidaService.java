@@ -119,4 +119,15 @@ public class PartidaService {
 
         return listResponse;
     }
+
+    /**
+     * Retorna a lista de todas as partidas cadastradas.
+     * Converte as entidades do banco em DTOs de resposta para o espectador.
+     */
+    public List<PartidaResponseDTO> listarTodas() {
+        return partidaRepository.findAll()
+                .stream()
+                .map(partidaMapper::toResponseDTO)
+                .toList();
+    }
 }
