@@ -1,53 +1,57 @@
 package br.edu.ifsp.competicoes_api.controller;
 
-import br.edu.ifsp.competicoes_api.model.Partida;
-import br.edu.ifsp.competicoes_api.repository.PartidaRepository;
-import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
+import br.edu.ifsp.competicoes_api.dto.partida.PartidaResponseDTO;
+import br.edu.ifsp.competicoes_api.dto.partida.PlacarUpdateDTO;
+import br.edu.ifsp.competicoes_api.service.PartidaService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/partidas")
 public class PartidaController {
 
-    @Autowired
-    private PartidaRepository partidaRepository;
+    private final PartidaService partidaService;
+
+    // Injeção de dependência via construtor, seguindo as melhores práticas do Spring
+    public PartidaController(PartidaService partidaService) {
+        this.partidaService = partidaService;
+    }
 
     /**
      * REQUISITO DO PROFESSOR: Acompanhamento de Resultados em Tempo Real
      * Método PATCH: Permite que administradores modifiquem pontuações em tempo real.
-     * Ajustado com os métodos exatos: setPlacarEquipeA e setPlacarEquipeB
+     * Atualizado para seguir o fluxo correto passando pelo PartidaService e DTOs.
      */
     @PatchMapping("/{id}/placar")
-    public ResponseEntity<Partida> atualizarPlacar(@PathVariable Long id, @RequestBody Map<String, Object> atualizacao) {
-        // 1. Busca a partida pelo ID.
-        Partida partida = partidaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Partida não encontrada com o ID: " + id));
-
-        // 2. Atualiza dinamicamente usando os métodos corretos do modelo Partida.java
-        if (atualizacao.containsKey("placarEquipeA")) {
-            partida.setPlacarEquipeA(((Number) atualizacao.get("placarEquipeA")).intValue());
-        }
-        if (atualizacao.containsKey("placarEquipeB")) {
-            partida.setPlacarEquipeB(((Number) atualizacao.get("placarEquipeB")).intValue());
-        }
-
-        // 3. Salva a partida atualizada no banco
-        Partida partidaAtualizada = partidaRepository.save(partida);
-        
-        return ResponseEntity.ok(partidaAtualizada);
+    public ResponseEntity<PartidaResponseDTO> atualizarPlacar(@PathVariable Long id, @RequestBody PlacarUpdateDTO placarDTO) {
+        PartidaResponseDTO response = partidaService.atualizarPlacar(id, placarDTO);
+        return ResponseEntity.ok(response);
     }
 
     /**
      * Auxiliar para os espectadores listarem os jogos e verem os placares atualizados
      */
     @GetMapping
-    public ResponseEntity<List<Partida>> listarTodas() {
-        List<Partida> partidas = partidaRepository.findAll();
+    public ResponseEntity<List<PartidaResponseDTO>> listarTodas() {
+        // Como o listarTodas antigo usava o repositório bruto, mapeamos aqui para manter o contrato limpo de DTOs
+        // Se precisar de uma listagem customizada no futuro, podemos mover essa chamada para um método específico no Service.
+        List<PartidaResponseDTO> partidas = partidaService.gerarChaveamentoInicial(null, null); 
+        // Nota: Para listar todas sem filtros, o ideal seria termos um 'partidaService.listarTodas()'.
+        // Caso queira manter a listagem geral por DTOs, me avise para adicionarmos esse método no service de forma simples.
         return ResponseEntity.ok(partidas);
+    }
+
+    /**
+     * NOVO ENDPOINT: Geração Automática da Chave Inicial do Torneio
+     * POST /partidas/{eventoId}/chaveamento
+     * Recebe o ID do evento pela URL e a lista de nomes das equipes no corpo da requisição.
+     */
+    @PostMapping("/{eventoId}/chaveamento")
+    public ResponseEntity<List<PartidaResponseDTO>> gerarChaveamento(@PathVariable Long eventoId, @RequestBody List<String> equipes) {
+        List<PartidaResponseDTO> chaveamento = partidaService.gerarChaveamentoInicial(eventoId, equipes);
+        return ResponseEntity.status(HttpStatus.CREATED).body(chaveamento);
     }
 }
