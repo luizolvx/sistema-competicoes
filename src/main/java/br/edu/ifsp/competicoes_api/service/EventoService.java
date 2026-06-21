@@ -2,11 +2,12 @@ package br.edu.ifsp.competicoes_api.service;
 
 import br.edu.ifsp.competicoes_api.dto.evento.EventoRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.evento.EventoResponseDTO;
+import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException; // Importação adicionada
 import br.edu.ifsp.competicoes_api.mapper.EventoMapper;
 import br.edu.ifsp.competicoes_api.model.Evento;
 import br.edu.ifsp.competicoes_api.model.Usuario;
 import br.edu.ifsp.competicoes_api.repository.EventoRepository;
-import br.edu.ifsp.competicoes_api.repository.UsuarioRepository; // Importação adicionada
+import br.edu.ifsp.competicoes_api.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +18,9 @@ import java.util.List;
 public class EventoService {
 
     private final EventoRepository eventoRepository;
-    private final UsuarioRepository usuarioRepository; // Dependência adicionada para o sistema de notificações
+    private final UsuarioRepository usuarioRepository;
     private final EventoMapper eventoMapper;
 
-    // O Spring Boot injeta essas três dependências automaticamente aqui via construtor
     public EventoService(EventoRepository eventoRepository, UsuarioRepository usuarioRepository, EventoMapper eventoMapper) {
         this.eventoRepository = eventoRepository;
         this.usuarioRepository = usuarioRepository;
@@ -49,15 +49,64 @@ public class EventoService {
     }
 
     /**
+     * Retorna a lista de todos os eventos.
+     */
+    public List<EventoResponseDTO> listarTodos() {
+        return eventoRepository.findAll()
+                .stream()
+                .map(eventoMapper::toResponseDTO)
+                .toList();
+    }
+
+    /**
+     * Busca um evento específico pelo ID.
+     */
+    public EventoResponseDTO buscarPorId(Long id) {
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento não encontrado com o ID: " + id));
+        return eventoMapper.toResponseDTO(evento);
+    }
+
+    /**
+     * REQUISITO ADMINISTRATIVO: Atualiza os dados de um evento existente.
+     */
+    @Transactional
+    public EventoResponseDTO atualizarEvento(Long id, EventoRequestDTO requestDTO) {
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento não encontrado com o ID: " + id));
+
+        // REGRA DE NEGÓCIO: A nova data também não pode estar no passado
+        if (requestDTO.dataRealizacao().isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("A nova data do evento não pode ser uma data no passado.");
+        }
+
+        evento.setNome(requestDTO.nome());
+        evento.setModalidade(requestDTO.modalidade());
+        evento.setDataRealizacao(requestDTO.dataRealizacao());
+
+        Evento eventoAtualizado = eventoRepository.save(evento);
+        return eventoMapper.toResponseDTO(eventoAtualizado);
+    }
+
+    /**
+     * REQUISITO ADMINISTRATIVO: Remove um evento do sistema de competições.
+     */
+    @Transactional
+    public void excluirEvento(Long id) {
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento não encontrado com o ID: " + id));
+
+        eventoRepository.delete(evento);
+    }
+    /**
      * Lógica interna para buscar usuários interessados e simular o envio de notificações via console.
      */
     private void dispararNotificacoesPorModalidade(String modalidade, String nomeEvento) {
         if (modalidade == null) return;
 
-        // Busca no banco todos os alunos que marcaram essa modalidade como favorita
         List<Usuario> interessados = usuarioRepository.findByInteressesContaining(modalidade);
 
-        // Simulação do envio (Logs estruturados para validação das regras de negócio do MVP)
+        // CORREÇÃO: Removido o caractere inválido antes de "interessados"
         for (Usuario usuario : interessados) {
             System.out.println("==========================================================================");
             System.out.println("🔔 [NOTIFICAÇÃO SISTEMA] Enviando aviso para: " + usuario.getNome() + " (" + usuario.getEmail() + ")");
