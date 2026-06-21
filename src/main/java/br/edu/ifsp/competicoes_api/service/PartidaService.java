@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 @Service
 public class PartidaService {
@@ -73,5 +76,47 @@ public class PartidaService {
 
         // 4. Converte a partida atualizada de volta para o DTO de resposta
         return partidaMapper.toResponseDTO(partidaAtualizada);
+    }
+
+    /**
+     * NOVA FUNCIONALIDADE: Algoritmo de Geração Automática da Chave Inicial do Torneio (Mata-Mata)
+     * Embaralha as equipes para um sorteio justo e gera os confrontos iniciais do evento.
+     */
+    @Transactional
+    public List<PartidaResponseDTO> gerarChaveamentoInicial(Long eventoId, List<String> equipes) {
+        // 1. Valida se o evento de destino realmente existe
+        Evento evento = eventoRepository.findById(eventoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Evento não encontrado com o ID: " + eventoId));
+
+        // 2. Regra de Negócio: São necessárias no mínimo 2 equipes para haver disputa
+        if (equipes == null || equipes.size() < 2) {
+            throw new IllegalArgumentException("São necessárias pelo menos 2 equipes para gerar um chaveamento automático.");
+        }
+
+        // Clona a lista para evitar mutações indesejadas e realiza o sorteio (embaralhamento)
+        List<String> listaSorteio = new ArrayList<>(equipes);
+        Collections.shuffle(listaSorteio);
+
+        // Se o número de inscritos for ímpar, adiciona uma vaga de avanço automático (Bye/W.O.)
+        if (listaSorteio.size() % 2 != 0) {
+            listaSorteio.add("AVANÇO AUTOMÁTICO (Folga)");
+        }
+
+        List<PartidaResponseDTO> listResponse = new ArrayList<>();
+
+        // 3. Agrupa as equipes de duas em duas criando os confrontos
+        for (int i = 0; i < listaSorteio.size(); i += 2) {
+            Partida partida = new Partida();
+            partida.setEvento(evento);
+            partida.setEquipeA(listaSorteio.get(i));
+            partida.setEquipeB(listaSorteio.get(i + 1));
+            // Define uma data inicial padrão condizente (ex: data e hora atual ou do próprio evento)
+            partida.setDataHora(LocalDateTime.now().plusDays(1)); 
+
+            Partida partidaSalva = partidaRepository.save(partida);
+            listResponse.add(partidaMapper.toResponseDTO(partidaSalva));
+        }
+
+        return listResponse;
     }
 }
