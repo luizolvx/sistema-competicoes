@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 public record EventoRequestDTO(
         @NotBlank(message = "O nome do evento é obrigatório")
         String nome,
@@ -17,5 +19,6 @@ public record EventoRequestDTO(
 
         @NotNull(message = "A data de realização é obrigatória")
         @FutureOrPresent(message = "A data do evento não pode ser no passado")
+        @JsonFormat(pattern = "yyyy-MM-dd")
         LocalDate dataRealizacao
 ) {}

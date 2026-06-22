@@ -1,8 +1,10 @@
 package br.edu.ifsp.competicoes_api.controller;
 
+import br.edu.ifsp.competicoes_api.dto.partida.PartidaRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.partida.PartidaResponseDTO;
 import br.edu.ifsp.competicoes_api.dto.partida.PlacarUpdateDTO;
 import br.edu.ifsp.competicoes_api.service.PartidaService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/partidas")
+@CrossOrigin(origins = "*") // Permite integração futura com o front-end sem problemas de CORS
 public class PartidaController {
 
     private final PartidaService partidaService;
@@ -21,12 +24,22 @@ public class PartidaController {
     }
 
     /**
+     * CADASTRO MANUAL: Permite cadastrar uma partida avulsa vinculada a um evento.
+     * Utiliza @Valid para garantir que as validações do DTO sejam respeitadas.
+     */
+    @PostMapping
+    public ResponseEntity<PartidaResponseDTO> cadastrar(@RequestBody @Valid PartidaRequestDTO request) {
+        PartidaResponseDTO response = partidaService.cadastrarPartida(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
      * REQUISITO DO PROFESSOR: Acompanhamento de Resultados em Tempo Real
      * Método PATCH: Permite que administradores modifiquem pontuações em tempo real.
      * Atualizado para seguir o fluxo correto passando pelo PartidaService e DTOs.
      */
     @PatchMapping("/{id}/placar")
-    public ResponseEntity<PartidaResponseDTO> atualizarPlacar(@PathVariable Long id, @RequestBody PlacarUpdateDTO placarDTO) {
+    public ResponseEntity<PartidaResponseDTO> atualizarPlacar(@PathVariable Long id, @RequestBody @Valid PlacarUpdateDTO placarDTO) {
         PartidaResponseDTO response = partidaService.atualizarPlacar(id, placarDTO);
         return ResponseEntity.ok(response);
     }

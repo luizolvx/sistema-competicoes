@@ -67,14 +67,22 @@ public class PartidaService {
         Partida partida = partidaRepository.findById(partidaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Partida não encontrada com o ID: " + partidaId));
 
-        // 2. Atualiza os dados da entidade com os novos placares vindos do DTO
+        // 2. Guarda uma referência segura do evento antes da atualização
+        Evento eventoAtual = partida.getEvento();
+
+        // 3. Atualiza os dados da entidade com os novos placares vindos do DTO
         partida.setPlacarEquipeA(placarDTO.placarEquipeA());
         partida.setPlacarEquipeB(placarDTO.placarEquipeB());
 
-        // 3. Salva a partida atualizada no banco de dados
+        // 4. Salva a partida atualizada no banco de dados
         Partida partidaAtualizada = partidaRepository.save(partida);
 
-        // 4. Converte a partida atualizada de volta para o DTO de resposta
+        // 5. CORREÇÃO: Garante que a partida atualizada mantenha o vínculo estável do evento para o Mapper
+        if (partidaAtualizada.getEvento() == null && eventoAtual != null) {
+            partidaAtualizada.setEvento(eventoAtual);
+        }
+
+        // 6. Converte a partida atualizada de volta para o DTO de resposta
         return partidaMapper.toResponseDTO(partidaAtualizada);
     }
 
