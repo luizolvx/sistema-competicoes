@@ -13,10 +13,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 class UsuarioServiceTest {
@@ -25,13 +30,15 @@ class UsuarioServiceTest {
     private UsuarioRepository usuarioRepository;
 
     private final UsuarioMapper usuarioMapper = UsuarioMapper.INSTANCE;
+    
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     private UsuarioService usuarioService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        this.usuarioService = new UsuarioService(usuarioRepository, usuarioMapper);
+        this.usuarioService = new UsuarioService(usuarioRepository, usuarioMapper, passwordEncoder);
     }
 
     @Test
@@ -57,6 +64,12 @@ class UsuarioServiceTest {
 
         verify(usuarioRepository, times(1)).findByEmail(request.email());
         verify(usuarioRepository, times(1)).save(any(Usuario.class));
+
+        // SEGURANÇA: garante que a senha NÃO foi salva em texto puro
+        verify(usuarioRepository).save(argThat(usuario ->
+                !usuario.getSenha().equals(request.senha()) &&
+                passwordEncoder.matches(request.senha(), usuario.getSenha())
+        ));
     }
 
     @Test
@@ -220,4 +233,68 @@ class UsuarioServiceTest {
         assertEquals("E-mail já cadastrado no sistema por outro usuário.", excecao.getMessage());
         verify(usuarioRepository, never()).save(any(Usuario.class));
     }
+
+
+    // --- TESTES DE AUTENTICAÇÃO (LOGIN COM BCRYPT) ---
+
+    @Test
+    @DisplayName("Deve autenticar usuário com sucesso quando a senha está correta")
+    void deveAutenticarComSucesso() {
+        String senhaPura = "senha123";
+        String senhaCriptografada = passwordEncoder.encode(senhaPura);
+
+        Usuario usuarioMock = new Usuario();
+        usuarioMock.setId(1L);
+        usuarioMock.setNome("Gustavo");
+        usuarioMock.setEmail("gustavo@email.com");
+        usuarioMock.setSenha(senhaCriptografada);
+
+        var loginRequest = new br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO(
+                "gustavo@email.com", senhaPura);
+
+        when(usuarioRepository.findByEmail("gustavo@email.com"))
+                .thenReturn(Optional.of(usuarioMock));
+
+        UsuarioResponseDTO response = usuarioService.autenticar(loginRequest);
+
+        assertNotNull(response);
+        assertEquals("gustavo@email.com", response.email());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao autenticar com senha incorreta")
+    void deveLancarExcecaoQuandoSenhaIncorreta() {
+        String senhaCriptografada = passwordEncoder.encode("senhaCorreta");
+
+        Usuario usuarioMock = new Usuario();
+        usuarioMock.setEmail("gustavo@email.com");
+        usuarioMock.setSenha(senhaCriptografada);
+
+        var loginRequest = new br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO(
+                "gustavo@email.com", "senhaErrada");
+
+        when(usuarioRepository.findByEmail("gustavo@email.com"))
+                .thenReturn(Optional.of(usuarioMock));
+
+        IllegalArgumentException excecao = assertThrows(IllegalArgumentException.class, () -> {
+            usuarioService.autenticar(loginRequest);
+        });
+
+        assertEquals("Senha incorreta.", excecao.getMessage());
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao autenticar com e-mail inexistente")
+    void deveLancarExcecaoQuandoEmailNaoExisteNoLogin() {
+        var loginRequest = new br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO(
+                "naoexiste@email.com", "qualquerSenha");
+
+        when(usuarioRepository.findByEmail("naoexiste@email.com"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> {
+            usuarioService.autenticar(loginRequest);
+        });
+    }
+
 }

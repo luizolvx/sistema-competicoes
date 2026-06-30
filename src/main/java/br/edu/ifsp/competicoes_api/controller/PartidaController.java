@@ -64,4 +64,16 @@ public class PartidaController {
         List<PartidaResponseDTO> chaveamento = partidaService.gerarChaveamentoInicial(eventoId, equipes);
         return ResponseEntity.status(HttpStatus.CREATED).body(chaveamento);
     }
+
+
+    /**
+     * REQUISITO: Listar partidas de um evento específico
+     * GET /partidas/evento/{eventoId}
+     */
+    @GetMapping("/evento/{eventoId}")
+    public ResponseEntity<List<PartidaResponseDTO>> listarPorEvento(@PathVariable Long eventoId) {
+        List<PartidaResponseDTO> partidas = partidaService.listarPorEvento(eventoId);
+        return ResponseEntity.ok(partidas);
+    }
+
 }

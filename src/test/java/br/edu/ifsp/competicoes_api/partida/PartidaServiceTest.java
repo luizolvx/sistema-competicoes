@@ -292,4 +292,30 @@ class PartidaServiceTest {
         assertEquals(102L, resultado.get(1).id());
         verify(partidaRepository, times(1)).findAll();
     }
+
+
+    @Test
+    @DisplayName("Deve listar todas as partidas de um evento específico")
+    void deveListarPartidasPorEvento() {
+        Long eventoId = 1L;
+
+        Partida partida1 = new Partida();
+        partida1.setId(1L);
+        partida1.setEquipeA("Time A");
+        partida1.setEquipeB("Time B");
+
+        when(partidaRepository.findByEventoId(eventoId))
+                .thenReturn(java.util.List.of(partida1));
+
+        List<PartidaResponseDTO> response = partidaService.listarPorEvento(eventoId);
+
+        assertNotNull(response);
+        assertEquals(1, response.size());
+
+        verify(partidaRepository, times(1)).findByEventoId(eventoId);
+    }
+
+
+
+
 }

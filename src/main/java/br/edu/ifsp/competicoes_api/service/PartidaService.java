@@ -138,4 +138,16 @@ public class PartidaService {
                 .map(partidaMapper::toResponseDTO)
                 .toList();
     }
+
+
+    /**
+     * Lista todas as partidas de um evento específico.
+     */
+    public List<PartidaResponseDTO> listarPorEvento(Long eventoId) {
+        return partidaRepository.findByEventoId(eventoId)
+                .stream()
+                .map(partidaMapper::toResponseDTO)
+                .toList();
+    }
+
 }

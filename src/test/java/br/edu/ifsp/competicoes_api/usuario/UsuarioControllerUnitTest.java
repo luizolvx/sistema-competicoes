@@ -1,5 +1,6 @@
 package br.edu.ifsp.competicoes_api.usuario;
 
+import br.edu.ifsp.competicoes_api.config.JwtUtil;
 import br.edu.ifsp.competicoes_api.controller.UsuarioController;
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioResponseDTO;
@@ -17,6 +18,8 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,6 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UsuarioController.class)
+@WithMockUser
 class UsuarioControllerUnitTest {
 
     // --- BLINDAGEM SUPREMA: Cria um contexto isolado só para este teste ---
@@ -54,6 +58,10 @@ class UsuarioControllerUnitTest {
     @MockitoBean
     private UsuarioService usuarioService;
 
+    // NOVO: necessário pois o construtor de UsuarioController agora também exige um JwtUtil
+    @MockitoBean
+    private JwtUtil jwtUtil;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -68,6 +76,7 @@ class UsuarioControllerUnitTest {
 
         // WHEN & THEN
         mockMvc.perform(post("/usuarios")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -119,6 +128,7 @@ class UsuarioControllerUnitTest {
 
         // WHEN & THEN
         mockMvc.perform(put("/usuarios/{id}", idUsuario)
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -133,7 +143,8 @@ class UsuarioControllerUnitTest {
         doNothing().when(usuarioService).excluirUsuario(idUsuario);
 
         // WHEN & THEN
-        mockMvc.perform(delete("/usuarios/{id}", idUsuario))
+        mockMvc.perform(delete("/usuarios/{id}", idUsuario)
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isNoContent());
 
         verify(usuarioService, times(1)).excluirUsuario(idUsuario);

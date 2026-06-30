@@ -68,4 +68,16 @@ public class ComentarioController {
         
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * REQUISITO: Listar comentários de um evento (mural do evento)
+     * GET /comentarios/evento/{eventoId}
+     */
+    @GetMapping("/evento/{eventoId}")
+    public ResponseEntity<List<ComentarioResponseDTO>> listarPorEvento(@PathVariable Long eventoId) {
+        List<ComentarioResponseDTO> comentarios = comentarioService.listarPorEvento(eventoId);
+        return ResponseEntity.ok(comentarios);
+    }
+
+
 }

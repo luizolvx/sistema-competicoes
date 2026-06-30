@@ -12,15 +12,20 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+import br.edu.ifsp.competicoes_api.config.JwtUtil;
+import br.edu.ifsp.competicoes_api.dto.usuario.LoginResponseDTO;
+
 @RestController
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
     // CORREÇÃO: Mudamos de @Autowired para Injeção via Construtor (Boa prática recomendada pelo VS Code)
     private final UsuarioService usuarioService;
+    private final JwtUtil jwtUtil;
 
-    public UsuarioController(UsuarioService usuarioService) {
+    public UsuarioController(UsuarioService usuarioService, JwtUtil jwtUtil) {
         this.usuarioService = usuarioService;
+        this.jwtUtil = jwtUtil;
     }
 
     @GetMapping("/teste")
@@ -59,10 +64,20 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UsuarioResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
         try {
             UsuarioResponseDTO usuario = usuarioService.autenticar(loginRequest);
-            return ResponseEntity.ok(usuario);
+            String token = jwtUtil.gerarToken(usuario.email(), usuario.role().name());
+
+            LoginResponseDTO response = new LoginResponseDTO(
+                    usuario.id(),
+                    usuario.nome(),
+                    usuario.email(),
+                    usuario.role(),
+                    token
+            );
+
+            return ResponseEntity.ok(response);
         } catch (ResourceNotFoundException | IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
