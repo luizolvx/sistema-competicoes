@@ -64,4 +64,17 @@ public class ComentarioService {
         }
         comentarioRepository.deleteById(id);
     }
+
+    @Transactional
+    public ComentarioResponseDTO adicionarMidias(Long id, List<String> midias) {
+        Comentario comentario = comentarioRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Comentário não encontrado com o ID: " + id));
+
+        if (midias != null) {
+            comentario.getMidias().addAll(midias);
+        }
+
+        Comentario comentarioSalvo = comentarioRepository.save(comentario);
+        return comentarioMapper.toResponseDTO(comentarioSalvo);
+    }
 }

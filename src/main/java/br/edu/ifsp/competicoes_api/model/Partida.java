@@ -17,7 +17,6 @@ public class Partida {
     @Column(name = "equipe_b", nullable = false)
     private String equipeB;
 
-    // Placar usando Integer para aceitar nulo antes do jogo começar
     @Column(name = "placar_equipe_a")
     private Integer placarEquipeA;
 
@@ -29,16 +28,16 @@ public class Partida {
 
     private String local;
 
-    // O lado "Many" do relacionamento: Muitas partidas pertencem a um Evento
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private StatusPartida status = StatusPartida.AGENDADA;
+
     @ManyToOne
     @JoinColumn(name = "evento_id", nullable = false)
     private Evento evento;
 
-    // Construtor padrão obrigatório pelo Hibernate
     public Partida() {
     }
-
-    // --- GETTERS E SETTERS ---
 
     public Long getId() {
         return id;
@@ -94,6 +93,14 @@ public class Partida {
 
     public void setLocal(String local) {
         this.local = local;
+    }
+
+    public StatusPartida getStatus() {
+        return status;
+    }
+
+    public void setStatus(StatusPartida status) {
+        this.status = status;
     }
 
     public Evento getEvento() {

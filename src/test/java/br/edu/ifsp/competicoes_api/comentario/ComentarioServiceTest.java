@@ -52,9 +52,9 @@ class ComentarioServiceTest {
         when(eventoRepository.findById(10L)).thenReturn(Optional.of(e));
         when(comentarioMapper.toModel(any())).thenReturn(c);
         when(comentarioRepository.save(any())).thenReturn(c);
-        
+
         when(comentarioMapper.toResponseDTO(any())).thenReturn(
-            new ComentarioResponseDTO(100L, "Ansioso para o torneio!", LocalDateTime.now(), 1L, "Gustavo", 10L)
+            new ComentarioResponseDTO(100L, "Ansioso para o torneio!", LocalDateTime.now(), 1L, "Gustavo", 10L, List.of())
         );
 
         assertNotNull(comentarioService.publicarComentario(request));
@@ -86,9 +86,9 @@ class ComentarioServiceTest {
         Long eventoId = 10L;
         Comentario c = new Comentario();
         when(comentarioRepository.findByEventoId(eventoId)).thenReturn(List.of(c));
-        
+
         when(comentarioMapper.toResponseDTO(any())).thenReturn(
-            new ComentarioResponseDTO(1L, "Teste", LocalDateTime.now(), 1L, "User", eventoId)
+            new ComentarioResponseDTO(1L, "Teste", LocalDateTime.now(), 1L, "User", eventoId, List.of())
         );
 
         var lista = comentarioService.listarPorEvento(eventoId);

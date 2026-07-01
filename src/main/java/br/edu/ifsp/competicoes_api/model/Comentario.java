@@ -2,6 +2,8 @@ package br.edu.ifsp.competicoes_api.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "comentarios")
@@ -11,28 +13,27 @@ public class Comentario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Limitamos o textão do fórum em 500 caracteres para o MVP
     @Column(nullable = false, length = 500)
     private String texto;
 
     @Column(name = "data_publicacao", nullable = false)
     private LocalDateTime dataPublicacao;
 
-    // Relacionamento: Muitos comentários podem ser feitos por um único Usuário (Épico 2/5)
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    // Relacionamento: Muitos comentários pertencem a um único Evento Esportivo (Épico 1/5)
     @ManyToOne
     @JoinColumn(name = "evento_id", nullable = false)
     private Evento evento;
 
-    // Construtor padrão que o Hibernate exige
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "comentario_midias", joinColumns = @JoinColumn(name = "comentario_id"))
+    @Column(name = "url", length = 500)
+    private List<String> midias = new ArrayList<>();
+
     public Comentario() {
     }
-
-    // --- GETTERS E SETTERS ---
 
     public Long getId() {
         return id;
@@ -72,5 +73,13 @@ public class Comentario {
 
     public void setEvento(Evento evento) {
         this.evento = evento;
+    }
+
+    public List<String> getMidias() {
+        return midias;
+    }
+
+    public void setMidias(List<String> midias) {
+        this.midias = midias;
     }
 }

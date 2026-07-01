@@ -3,8 +3,9 @@ package br.edu.ifsp.competicoes_api.controller;
 import br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioResponseDTO;
-import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException; // CORREÇÃO: Importação adicionada!
+import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
 import br.edu.ifsp.competicoes_api.service.UsuarioService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,6 @@ import br.edu.ifsp.competicoes_api.dto.usuario.LoginResponseDTO;
 @RequestMapping("/usuarios")
 public class UsuarioController {
 
-    // CORREÇÃO: Mudamos de @Autowired para Injeção via Construtor (Boa prática recomendada pelo VS Code)
     private final UsuarioService usuarioService;
     private final JwtUtil jwtUtil;
 
@@ -34,7 +34,7 @@ public class UsuarioController {
     }
 
     @PostMapping
-    public ResponseEntity<UsuarioResponseDTO> cadastrar(@RequestBody UsuarioRequestDTO requestDTO) {
+    public ResponseEntity<UsuarioResponseDTO> cadastrar(@RequestBody @Valid UsuarioRequestDTO requestDTO) {
         UsuarioResponseDTO response = usuarioService.cadastrarUsuario(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -52,7 +52,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponseDTO> atualizar(@PathVariable Long id, @RequestBody UsuarioRequestDTO requestDTO) {
+    public ResponseEntity<UsuarioResponseDTO> atualizar(@PathVariable Long id, @RequestBody @Valid UsuarioRequestDTO requestDTO) {
         UsuarioResponseDTO response = usuarioService.atualizarUsuario(id, requestDTO);
         return ResponseEntity.ok(response);
     }
@@ -64,7 +64,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody @Valid LoginRequestDTO loginRequest) {
         try {
             UsuarioResponseDTO usuario = usuarioService.autenticar(loginRequest);
             String token = jwtUtil.gerarToken(usuario.email(), usuario.role().name());
