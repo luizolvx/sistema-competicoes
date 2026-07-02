@@ -1,4 +1,4 @@
-package br.edu.ifsp.competicoes_api.config;
+package br.edu.ifsp.auth_service.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

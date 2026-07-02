@@ -1,4 +1,4 @@
-package br.edu.ifsp.competicoes_api.repository;
+package br.edu.ifsp.auth_service.repository;
 
 import br.edu.ifsp.competicoes_api.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;

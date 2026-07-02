@@ -1,4 +1,4 @@
-package br.edu.ifsp.competicoes_api.usuario;
+package br.edu.ifsp.auth_service.usuario;
 
 import br.edu.ifsp.competicoes_api.config.JwtUtil;
 import br.edu.ifsp.competicoes_api.controller.UsuarioController;

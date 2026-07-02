@@ -1,4 +1,4 @@
-package br.edu.ifsp.competicoes_api.mapper;
+package br.edu.ifsp.auth_service.mapper;
 
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioResponseDTO;

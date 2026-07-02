@@ -1,4 +1,4 @@
-package br.edu.ifsp.competicoes_api.model;
+package br.edu.ifsp.auth_service.model;
 
 import jakarta.persistence.*;
 import java.util.ArrayList;

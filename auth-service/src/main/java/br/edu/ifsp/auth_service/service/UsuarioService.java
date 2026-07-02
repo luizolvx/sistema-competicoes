@@ -1,4 +1,4 @@
-package br.edu.ifsp.competicoes_api.service;
+package br.edu.ifsp.auth_service.service;
 
 import br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;

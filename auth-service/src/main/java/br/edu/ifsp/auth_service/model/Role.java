@@ -1,4 +1,4 @@
-package br.edu.ifsp.competicoes_api.model;
+package br.edu.ifsp.auth_service.model;
 
 public enum Role {
     ROLE_USER,

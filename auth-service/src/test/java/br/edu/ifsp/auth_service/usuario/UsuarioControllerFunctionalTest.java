@@ -1,4 +1,4 @@
-package br.edu.ifsp.competicoes_api.usuario;
+package br.edu.ifsp.auth_service.usuario;
 
 public class UsuarioControllerFunctionalTest {
 }
