@@ -2,12 +2,10 @@ package br.edu.ifsp.competicoes_api.service;
 
 import br.edu.ifsp.competicoes_api.dto.evento.EventoRequestDTO;
 import br.edu.ifsp.competicoes_api.dto.evento.EventoResponseDTO;
-import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException; // Importação adicionada
+import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
 import br.edu.ifsp.competicoes_api.mapper.EventoMapper;
 import br.edu.ifsp.competicoes_api.model.Evento;
-import br.edu.ifsp.competicoes_api.model.Usuario;
 import br.edu.ifsp.competicoes_api.repository.EventoRepository;
-import br.edu.ifsp.competicoes_api.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +16,10 @@ import java.util.List;
 public class EventoService {
 
     private final EventoRepository eventoRepository;
-    private final UsuarioRepository usuarioRepository;
     private final EventoMapper eventoMapper;
 
-    public EventoService(EventoRepository eventoRepository, UsuarioRepository usuarioRepository, EventoMapper eventoMapper) {
+    public EventoService(EventoRepository eventoRepository, EventoMapper eventoMapper) {
         this.eventoRepository = eventoRepository;
-        this.usuarioRepository = usuarioRepository;
         this.eventoMapper = eventoMapper;
     }
 
@@ -98,20 +94,18 @@ public class EventoService {
 
         eventoRepository.delete(evento);
     }
+
     /**
      * Lógica interna para buscar usuários interessados e simular o envio de notificações via console.
      */
     private void dispararNotificacoesPorModalidade(String modalidade, String nomeEvento) {
         if (modalidade == null) return;
 
-        List<Usuario> interessados = usuarioRepository.findByInteressesContaining(modalidade);
-
-        // CORREÇÃO: Removido o caractere inválido antes de "interessados"
-        for (Usuario usuario : interessados) {
-            System.out.println("==========================================================================");
-            System.out.println("🔔 [NOTIFICAÇÃO SISTEMA] Enviando aviso para: " + usuario.getNome() + " (" + usuario.getEmail() + ")");
-            System.out.println("📢 Olá! Um novo evento de " + modalidade + " foi criado: \"" + nomeEvento + "\"!");
-            System.out.println("==========================================================================");
-        }
+        // Como o monólito não tem mais acesso ao banco de Usuários, simulamos o aviso
+        // para futura integração via rede com o microsserviço auth-service.
+        System.out.println("==========================================================================");
+        System.out.println("🔔 [AVISO DE ARQUITETURA] Um novo evento de " + modalidade + " foi criado: \"" + nomeEvento + "\"!");
+        System.out.println("📢 O disparo de notificações (buscando interesses) deve ser roteado para o microsserviço de usuários.");
+        System.out.println("==========================================================================");
     }
 }

@@ -13,15 +13,16 @@ public interface ComentarioMapper {
     ComentarioMapper INSTANCE = Mappers.getMapper(ComentarioMapper.class);
 
     // Na ida (Request -> Model), ignoramos os objetos complexos pois vamos buscá-los no banco manualmente
-    @Mapping(target = "usuario", ignore = true)
+    @Mapping(target = "autorId", source = "usuarioId")
     @Mapping(target = "evento", ignore = true)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "dataPublicacao", ignore = true)
+    @Mapping(target = "midias", ignore = true)
     Comentario toModel(ComentarioRequestDTO requestDTO);
 
     // Na volta (Model -> Response), ensinamos de onde puxar os dados
-    @Mapping(source = "usuario.id", target = "usuarioId")
-    @Mapping(source = "usuario.nome", target = "nomeUsuario")
+    @Mapping(source = "autorId", target = "usuarioId")
+    @Mapping(target = "nomeUsuario", ignore = true) // O nome não fica mais no banco do monólito
     @Mapping(source = "evento.id", target = "eventoId")
     ComentarioResponseDTO toResponseDTO(Comentario comentario);
 }

@@ -19,9 +19,8 @@ public class Comentario {
     @Column(name = "data_publicacao", nullable = false)
     private LocalDateTime dataPublicacao;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id", nullable = false)
-    private Usuario usuario;
+    @Column(name = "autor_id")
+    private Long autorId;
 
     @ManyToOne
     @JoinColumn(name = "evento_id", nullable = false)
@@ -59,12 +58,12 @@ public class Comentario {
         this.dataPublicacao = dataPublicacao;
     }
 
-    public Usuario getUsuario() {
-        return usuario;
+    public Long getAutorId() {
+        return autorId;
     }
 
-    public void setUsuario(Usuario usuario) {
-        this.usuario = usuario;
+    public void setAutorId(Long autorId) {
+        this.autorId = autorId;
     }
 
     public Evento getEvento() {

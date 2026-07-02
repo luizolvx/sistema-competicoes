@@ -1,12 +1,12 @@
 package br.edu.ifsp.auth_service.usuario;
 
-import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
-import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioResponseDTO;
-import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
-import br.edu.ifsp.competicoes_api.mapper.UsuarioMapper;
-import br.edu.ifsp.competicoes_api.model.Usuario;
-import br.edu.ifsp.competicoes_api.repository.UsuarioRepository;
-import br.edu.ifsp.competicoes_api.service.UsuarioService;
+import br.edu.ifsp.auth_service.dto.usuario.UsuarioRequestDTO;
+import br.edu.ifsp.auth_service.dto.usuario.UsuarioResponseDTO;
+import br.edu.ifsp.auth_service.exception.ResourceNotFoundException;
+import br.edu.ifsp.auth_service.mapper.UsuarioMapper;
+import br.edu.ifsp.auth_service.model.Usuario;
+import br.edu.ifsp.auth_service.repository.UsuarioRepository;
+import br.edu.ifsp.auth_service.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -249,7 +249,7 @@ class UsuarioServiceTest {
         usuarioMock.setEmail("gustavo@email.com");
         usuarioMock.setSenha(senhaCriptografada);
 
-        var loginRequest = new br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO(
+        var loginRequest = new br.edu.ifsp.auth_service.dto.usuario.LoginRequestDTO(
                 "gustavo@email.com", senhaPura);
 
         when(usuarioRepository.findByEmail("gustavo@email.com"))
@@ -270,7 +270,7 @@ class UsuarioServiceTest {
         usuarioMock.setEmail("gustavo@email.com");
         usuarioMock.setSenha(senhaCriptografada);
 
-        var loginRequest = new br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO(
+        var loginRequest = new br.edu.ifsp.auth_service.dto.usuario.LoginRequestDTO(
                 "gustavo@email.com", "senhaErrada");
 
         when(usuarioRepository.findByEmail("gustavo@email.com"))
@@ -286,7 +286,7 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("Deve lançar exceção ao autenticar com e-mail inexistente")
     void deveLancarExcecaoQuandoEmailNaoExisteNoLogin() {
-        var loginRequest = new br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO(
+        var loginRequest = new br.edu.ifsp.auth_service.dto.usuario.LoginRequestDTO(
                 "naoexiste@email.com", "qualquerSenha");
 
         when(usuarioRepository.findByEmail("naoexiste@email.com"))

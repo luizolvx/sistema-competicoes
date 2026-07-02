@@ -6,10 +6,8 @@ import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
 import br.edu.ifsp.competicoes_api.mapper.ComentarioMapper;
 import br.edu.ifsp.competicoes_api.model.Comentario;
 import br.edu.ifsp.competicoes_api.model.Evento;
-import br.edu.ifsp.competicoes_api.model.Usuario;
 import br.edu.ifsp.competicoes_api.repository.ComentarioRepository;
 import br.edu.ifsp.competicoes_api.repository.EventoRepository;
-import br.edu.ifsp.competicoes_api.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,30 +19,24 @@ import java.util.stream.Collectors;
 public class ComentarioService {
 
     private final ComentarioRepository comentarioRepository;
-    private final UsuarioRepository usuarioRepository;
     private final EventoRepository eventoRepository;
     private final ComentarioMapper comentarioMapper;
 
     public ComentarioService(ComentarioRepository comentarioRepository,
-                             UsuarioRepository usuarioRepository,
                              EventoRepository eventoRepository,
                              ComentarioMapper comentarioMapper) {
         this.comentarioRepository = comentarioRepository;
-        this.usuarioRepository = usuarioRepository;
         this.eventoRepository = eventoRepository;
         this.comentarioMapper = comentarioMapper;
     }
 
     @Transactional
     public ComentarioResponseDTO publicarComentario(ComentarioRequestDTO request) {
-        Usuario usuario = usuarioRepository.findById(request.usuarioId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado com o ID: " + request.usuarioId()));
-
         Evento evento = eventoRepository.findById(request.eventoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Evento não encontrado com o ID: " + request.eventoId()));
 
         Comentario comentario = comentarioMapper.toModel(request);
-        comentario.setUsuario(usuario);
+        comentario.setAutorId(request.usuarioId()); // Atribui apenas a referência do ID
         comentario.setEvento(evento);
         comentario.setDataPublicacao(LocalDateTime.now());
 

@@ -15,40 +15,30 @@ public class Usuario {
     @Column(nullable = false)
     private String nome;
 
-    @Column(nullable = false, unique = true) // Garante que não existam dois cadastros com o mesmo e-mail
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String senha;
 
-    // Salva a Role como String no banco de dados (ex: "ROLE_USER" ou "ROLE_ADMIN")
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
-    // Relacionamento: Um usuário pode fazer muitos comentários no mural do fórum
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comentario> comentarios = new ArrayList<>();
-
-    // Nova funcionalidade: Lista de modalidades/esportes de interesse do usuário para notificações
     @ElementCollection
     @CollectionTable(name = "usuario_interesses", joinColumns = @JoinColumn(name = "usuario_id"))
     @Column(name = "esporte")
     private List<String> interesses = new ArrayList<>();
 
-    // Construtor padrão que o Hibernate exige
     public Usuario() {
     }
 
-    // Construtor auxiliar útil para os testes
     public Usuario(String nome, String email, String senha, Role role) {
         this.nome = nome;
         this.email = email;
         this.senha = senha;
         this.role = role;
     }
-
-    // --- GETTERS E SETTERS ---
 
     public Long getId() {
         return id;
@@ -88,14 +78,6 @@ public class Usuario {
 
     public void setRole(Role role) {
         this.role = role;
-    }
-
-    public List<Comentario> getComentarios() {
-        return comentarios;
-    }
-
-    public void setComentarios(List<Comentario> comentarios) {
-        this.comentarios = comentarios;
     }
 
     public List<String> getInteresses() {

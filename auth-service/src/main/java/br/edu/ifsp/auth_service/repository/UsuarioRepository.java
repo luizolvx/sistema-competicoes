@@ -1,6 +1,6 @@
 package br.edu.ifsp.auth_service.repository;
 
-import br.edu.ifsp.competicoes_api.model.Usuario;
+import br.edu.ifsp.auth_service.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

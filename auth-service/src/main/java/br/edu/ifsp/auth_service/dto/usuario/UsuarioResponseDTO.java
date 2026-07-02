@@ -1,6 +1,6 @@
 package br.edu.ifsp.auth_service.dto.usuario;
 
-import br.edu.ifsp.competicoes_api.model.Role;
+import br.edu.ifsp.auth_service.model.Role;
 
 public record UsuarioResponseDTO(
         Long id,

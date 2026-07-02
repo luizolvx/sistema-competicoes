@@ -6,10 +6,8 @@ import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
 import br.edu.ifsp.competicoes_api.mapper.ComentarioMapper;
 import br.edu.ifsp.competicoes_api.model.Comentario;
 import br.edu.ifsp.competicoes_api.model.Evento;
-import br.edu.ifsp.competicoes_api.model.Usuario;
 import br.edu.ifsp.competicoes_api.repository.ComentarioRepository;
 import br.edu.ifsp.competicoes_api.repository.EventoRepository;
-import br.edu.ifsp.competicoes_api.repository.UsuarioRepository;
 import br.edu.ifsp.competicoes_api.service.ComentarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +26,6 @@ import static org.mockito.Mockito.*;
 class ComentarioServiceTest {
 
     @Mock private ComentarioRepository comentarioRepository;
-    @Mock private UsuarioRepository usuarioRepository;
     @Mock private EventoRepository eventoRepository;
     @Mock private ComentarioMapper comentarioMapper;
 
@@ -37,44 +34,35 @@ class ComentarioServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        this.comentarioService = new ComentarioService(comentarioRepository, usuarioRepository, eventoRepository, comentarioMapper);
+        // Instancia o serviço apenas com os repositórios que sobraram
+        this.comentarioService = new ComentarioService(comentarioRepository, eventoRepository, comentarioMapper);
     }
 
     @Test
     @DisplayName("Deve publicar um comentário com sucesso")
     void devePublicarComentarioComSucesso() {
         ComentarioRequestDTO request = new ComentarioRequestDTO("Ansioso para o torneio!", 1L, 10L);
-        Usuario u = new Usuario(); u.setId(1L); u.setNome("Gustavo");
         Evento e = new Evento(); e.setId(10L);
         Comentario c = new Comentario(); c.setId(100L);
 
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(u));
         when(eventoRepository.findById(10L)).thenReturn(Optional.of(e));
         when(comentarioMapper.toModel(any())).thenReturn(c);
         when(comentarioRepository.save(any())).thenReturn(c);
 
+        // O nome do usuário vai voltar como null pois o monólito não o conhece mais
         when(comentarioMapper.toResponseDTO(any())).thenReturn(
-            new ComentarioResponseDTO(100L, "Ansioso para o torneio!", LocalDateTime.now(), 1L, "Gustavo", 10L, List.of())
+                new ComentarioResponseDTO(100L, "Ansioso para o torneio!", LocalDateTime.now(), 1L, null, 10L, List.of())
         );
 
         assertNotNull(comentarioService.publicarComentario(request));
     }
 
     @Test
-    @DisplayName("Deve lançar exceção se o usuário autor não existir")
-    void deveLancarExcecaoQuandoUsuarioNaoEncontrado() {
-        ComentarioRequestDTO request = new ComentarioRequestDTO("Vai ser top!", 99L, 10L);
-        when(usuarioRepository.findById(99L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> comentarioService.publicarComentario(request));
-    }
-
-    @Test
     @DisplayName("Deve lançar exceção se o evento alvo não existir")
     void deveLancarExcecaoQuandoEventoNaoEncontrado() {
         ComentarioRequestDTO request = new ComentarioRequestDTO("Vai ser top!", 1L, 99L);
-        Usuario u = new Usuario(); u.setId(1L);
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(u));
+
+        // Simula apenas a busca do evento retornando vazio
         when(eventoRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> comentarioService.publicarComentario(request));
@@ -88,7 +76,7 @@ class ComentarioServiceTest {
         when(comentarioRepository.findByEventoId(eventoId)).thenReturn(List.of(c));
 
         when(comentarioMapper.toResponseDTO(any())).thenReturn(
-            new ComentarioResponseDTO(1L, "Teste", LocalDateTime.now(), 1L, "User", eventoId, List.of())
+                new ComentarioResponseDTO(1L, "Teste", LocalDateTime.now(), 1L, null, eventoId, List.of())
         );
 
         var lista = comentarioService.listarPorEvento(eventoId);

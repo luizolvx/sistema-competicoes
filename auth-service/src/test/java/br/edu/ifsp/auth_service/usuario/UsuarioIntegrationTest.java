@@ -1,9 +1,8 @@
 package br.edu.ifsp.auth_service.usuario;
 
-import br.edu.ifsp.competicoes_api.ServiceUsersApplication; // Certifique-se de importar a classe principal real!
-import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
-import br.edu.ifsp.competicoes_api.model.Role;
-import br.edu.ifsp.competicoes_api.repository.UsuarioRepository;
+import br.edu.ifsp.auth_service.AuthServiceApplication;
+import br.edu.ifsp.auth_service.dto.usuario.UsuarioRequestDTO;
+import br.edu.ifsp.auth_service.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,8 +19,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// AJUSTE CRÍTICO: Especifica a classe principal real para o Spring não herdar a TestConfig interna do outro teste
-@SpringBootTest(classes = ServiceUsersApplication.class)
+// AJUSTE CRÍTICO: Especifica a classe principal real do Auth Service
+@SpringBootTest(classes = AuthServiceApplication.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class UsuarioIntegrationTest {

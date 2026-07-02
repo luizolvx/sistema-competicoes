@@ -1,12 +1,12 @@
 package br.edu.ifsp.auth_service.usuario;
 
-import br.edu.ifsp.competicoes_api.config.JwtUtil;
-import br.edu.ifsp.competicoes_api.controller.UsuarioController;
-import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
-import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioResponseDTO;
-import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
-import br.edu.ifsp.competicoes_api.model.Role;
-import br.edu.ifsp.competicoes_api.service.UsuarioService;
+import br.edu.ifsp.auth_service.config.JwtUtil;
+import br.edu.ifsp.auth_service.controller.UsuarioController;
+import br.edu.ifsp.auth_service.dto.usuario.UsuarioRequestDTO;
+import br.edu.ifsp.auth_service.dto.usuario.UsuarioResponseDTO;
+import br.edu.ifsp.auth_service.exception.ResourceNotFoundException;
+import br.edu.ifsp.auth_service.model.Role;
+import br.edu.ifsp.auth_service.service.UsuarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,7 +58,6 @@ class UsuarioControllerUnitTest {
     @MockitoBean
     private UsuarioService usuarioService;
 
-    // NOVO: necessário pois o construtor de UsuarioController agora também exige um JwtUtil
     @MockitoBean
     private JwtUtil jwtUtil;
 

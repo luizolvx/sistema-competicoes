@@ -1,10 +1,9 @@
 package br.edu.ifsp.auth_service.controller;
 
-import br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO;
-import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
-import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioResponseDTO;
-import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
-import br.edu.ifsp.competicoes_api.service.UsuarioService;
+import br.edu.ifsp.auth_service.dto.usuario.LoginRequestDTO;
+import br.edu.ifsp.auth_service.dto.usuario.UsuarioRequestDTO;
+import br.edu.ifsp.auth_service.dto.usuario.UsuarioResponseDTO;
+import br.edu.ifsp.auth_service.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
-import br.edu.ifsp.competicoes_api.config.JwtUtil;
-import br.edu.ifsp.competicoes_api.dto.usuario.LoginResponseDTO;
+import br.edu.ifsp.auth_service.config.JwtUtil;
+import br.edu.ifsp.auth_service.dto.usuario.LoginResponseDTO;
 
 @RestController
 @RequestMapping("/usuarios")
@@ -78,7 +77,7 @@ public class UsuarioController {
             );
 
             return ResponseEntity.ok(response);
-        } catch (ResourceNotFoundException | IllegalArgumentException e) {
+        } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }

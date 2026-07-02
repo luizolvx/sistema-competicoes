@@ -1,13 +1,13 @@
 package br.edu.ifsp.auth_service.service;
 
-import br.edu.ifsp.competicoes_api.dto.usuario.LoginRequestDTO;
-import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioRequestDTO;
-import br.edu.ifsp.competicoes_api.dto.usuario.UsuarioResponseDTO;
-import br.edu.ifsp.competicoes_api.exception.ResourceNotFoundException;
-import br.edu.ifsp.competicoes_api.mapper.UsuarioMapper;
-import br.edu.ifsp.competicoes_api.model.Role;
-import br.edu.ifsp.competicoes_api.model.Usuario;
-import br.edu.ifsp.competicoes_api.repository.UsuarioRepository;
+import br.edu.ifsp.auth_service.dto.usuario.LoginRequestDTO;
+import br.edu.ifsp.auth_service.dto.usuario.UsuarioRequestDTO;
+import br.edu.ifsp.auth_service.dto.usuario.UsuarioResponseDTO;
+import br.edu.ifsp.auth_service.exception.ResourceNotFoundException;
+import br.edu.ifsp.auth_service.mapper.UsuarioMapper;
+import br.edu.ifsp.auth_service.model.Role;
+import br.edu.ifsp.auth_service.model.Usuario;
+import br.edu.ifsp.auth_service.repository.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
